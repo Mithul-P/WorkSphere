@@ -1,0 +1,1 @@
+{"version":"2.0.0","tasks":[{"label":"Install WorkSphere dependencies","type":"shell","command":"npm install","problemMatcher":[]},{"label":"Run WorkSphere","type":"shell","command":"npm run dev","isBackground":true,"problemMatcher":[],"presentation":{"reveal":"always","panel":"dedicated"}},{"label":"Test WorkSphere","type":"shell","command":"npm test","problemMatcher":[]}]}

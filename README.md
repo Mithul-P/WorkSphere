@@ -91,4 +91,3 @@ Syntax Syndicate — fill in member names and individual contributions before su
 - [OWASP object-level authorization](https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization/)
 - [PGlite](https://pglite.dev/docs/)
 - [Express security guidance](https://expressjs.com/en/advanced/best-practice-security/)
-

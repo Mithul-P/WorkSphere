@@ -1,0 +1,31 @@
+{
+  "name": "worksphere",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "tsx server/index.ts",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.14",
+    "express": "^5.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "lucide-react": "^0.468.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.20.0",
+    "vite": "^7.1.0",
+    "@vitejs/plugin-react": "^5.0.0"
+  }
+}
