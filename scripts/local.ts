@@ -32,7 +32,7 @@ const env = {
   DATABASE_URL: `postgres://worksphere_app:local_app_password@localhost:${databasePort}/worksphere`,
   OWNER_DATABASE_URL: `postgres://worksphere_owner:local_owner_password@localhost:${databasePort}/worksphere`,
   SESSION_SECRET: randomBytes(32).toString("hex"),
-  TOTP_ENCRYPTION_KEY: "0123456789abcdef".repeat(4),
+  TOTP_ENCRYPTION_KEY: randomBytes(32).toString("hex"),
   WEB_ORIGIN: `http://localhost:${webPort}`,
   PORT: String(apiPort),
   NODE_ENV: test ? "test" : "development",
