@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Layers3, LayoutDashboard, FolderKanban, CheckCheck, ShieldCheck, Users, Plus, ArrowUpRight, ArrowRight, ChevronRight, Search, LogOut, X, MoreHorizontal, CalendarDays, LockKeyhole, Activity, Check, AlertTriangle, Copy, Building2, Mail, ExternalLink } from 'lucide-react';
 type User = {
     id: string;
@@ -59,32 +59,34 @@ function App() {
     const [user, setUser] = useState<User | null>(null), [ready, setReady] = useState(false), [workspaces, setWorkspaces] = useState<Workspace[]>([]), [tenantId, setTenantId] = useState(''), [page, setPage] = useState('overview'), [projects, setProjects] = useState<Project[]>([]), [tasks, setTasks] = useState<Task[]>([]), [members, setMembers] = useState<Member[]>([]), [events, setEvents] = useState<Audit[]>([]), [selectedProject, setSelectedProject] = useState(''), [search, setSearch] = useState(''), [modal, setModal] = useState<Modal>(null), [toast, setToast] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(false), [demo, setDemo] = useState(false), [pending, setPending] = useState(false), [invite, setInvite] = useState(''), [auditFilter, setAuditFilter] = useState('all'), [probe, setProbe] = useState(''), [probeResult, setProbeResult] = useState('');
     const workspace = workspaces.find(w => w.id === tenantId), canEdit = workspace?.role !== 'viewer', isAdmin = workspace?.role === 'admin';
     const base = `/api/workspaces/${tenantId}`;
+    const activeScope=useRef('');
+    activeScope.current=`${user?.id||''}:${tenantId}`;
     const notify = (message: string) => { setToast(message); setTimeout(() => setToast(''), 4500); };
     useEffect(() => { Promise.all([api('/api/auth/session').then(s => { setUser(s.user); csrf = s.csrf; }).catch(() => { }), api('/api/health').then(h => setDemo(h.demo)).catch(() => { })]).finally(() => setReady(true)); }, []);
-    async function loadWorkspaces() { const list = await api<Workspace[]>('/api/workspaces'); setWorkspaces(list); setTenantId(old => list.some(w => w.id === old) ? old : list[0]?.id || ''); }
+    async function loadWorkspaces() { const currentUser=user?.id;const list = await api<Workspace[]>('/api/workspaces');if(!activeScope.current.startsWith(`${currentUser}:`))return; setWorkspaces(list); setTenantId(old => list.some(w => w.id === old) ? old : list[0]?.id || ''); }
     useEffect(() => { if (user)
         loadWorkspaces().catch(e => setError(e.message)); }, [user?.id]);
     async function refresh() { if (!tenantId)
-        return; setLoading(true); try {
+        return; const requestedScope=activeScope.current;setLoading(true); try {
         const [p, t, m] = await Promise.all([api<Project[]>(base + '/projects'), api<Task[]>(base + '/tasks'), api<Member[]>(base + '/members')]);
+        const log=isAdmin?await api<Audit[]>(base+'/audit'):[];
+        if(activeScope.current!==requestedScope)return;
         setProjects(p);
         setTasks(t);
         setMembers(m);
-        if (isAdmin)
-            setEvents(await api<Audit[]>(base + '/audit'));
-        else
-            setEvents([]);
+        setEvents(log);
         setError('');
     }
     catch (e) {
+        if(activeScope.current!==requestedScope)return;
         setError((e as Error).message);
         if (e instanceof ApiError && e.status === 401)
             setUser(null);
     }
     finally {
-        setLoading(false);
+        if(activeScope.current===requestedScope)setLoading(false);
     } }
-    useEffect(() => { setSelectedProject(''); setProbeResult(''); refresh(); }, [tenantId, workspace?.role]);
+    useEffect(() => { setSelectedProject(''); setProbeResult('');setProjects([]);setTasks([]);setMembers([]);setEvents([]); refresh(); }, [tenantId, workspace?.role,user?.id]);
     useEffect(() => { if (demo && user)
         api('/api/demo/target').then(r => setProbe(r.projectId || '')).catch(() => { }); }, [demo, user?.id]);
     useEffect(() => { if (!modal)
