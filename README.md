@@ -15,6 +15,8 @@ npm run dev
 
 Open **http://localhost:3000**. Both the frontend and API run on the same origin. No Docker, API key or external database account is required. Development data persists in `.data/`, which is excluded from Git.
 
+On Windows, you can also double-click **START-WORKSPHERE.cmd**. It installs missing dependencies and starts the server. Keep that terminal open while using the app. In VS Code, open this folder and select **Run and Debug → WorkSphere server** after installing dependencies.
+
 ### Demo accounts
 
 The login screen includes buttons to fill these local demo credentials. Password: `WorkSphereDemo2026!`
@@ -55,9 +57,13 @@ PGlite is an embedded PostgreSQL engine suitable for the local hackathon demonst
 npm run typecheck
 npm test
 npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
 The integration suite covers tenant ID swapping, read/write permissions, safe auditing, nested resources, CSRF, invitation replay, last-admin protection, direct database RLS enforcement and transaction isolation. Tests use a fresh in-memory PostgreSQL instance. CI runs the same checks.
+
+Browser tests cover account registration, independent workspace creation, project/task workflows, viewer restrictions, invitations and the Security Inspector. API and browser checks are complementary, rather than a claim to cover every possible input or attack.
 
 ## Configuration
 
