@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "start": "tsx server/index.ts",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.14",
@@ -26,6 +27,7 @@
     "typescript": "^5.9.0",
     "tsx": "^4.20.0",
     "vite": "^7.1.0",
-    "@vitejs/plugin-react": "^5.0.0"
+    "@vitejs/plugin-react": "^5.0.0",
+    "@playwright/test": "^1.56.0"
   }
 }

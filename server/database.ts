@@ -7,8 +7,9 @@ export type Row = Record<string, any>;
 export class Database {
   constructor(public readonly pg: PGlite) {}
   async query<T extends Row = Row>(sql:string, args:unknown[]=[]){return (await this.pg.query<T>(sql,args)).rows;}
-  async scope<T>(tenantId:string, action:(tx:Transaction)=>Promise<T>){
+  async scope<T>(tenantId:string, action:(tx:Transaction)=>Promise<T>, beforeRole?:(tx:Transaction)=>Promise<void>){
     return this.pg.transaction(async tx=>{
+      if(beforeRole)await beforeRole(tx);
       await tx.query("SELECT set_config('app.tenant_id', $1, true)",[tenantId]);
       await tx.exec('SET LOCAL ROLE worksphere_app');
       return action(tx);
