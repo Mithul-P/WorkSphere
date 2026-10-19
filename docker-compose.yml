@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bootstrap_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_owner_password}
+      POSTGRES_DB: worksphere
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-local_app_password}
+      OWNER_DB_PASSWORD: ${POSTGRES_PASSWORD:-local_owner_password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/01-roles.sh:ro
+      - ./db/security.sql:/security.sql:ro
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bootstrap_admin -d worksphere"]
+      interval: 3s
+      retries: 20
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://worksphere_app:${APP_DB_PASSWORD:-local_app_password}@postgres:5432/worksphere
+      OWNER_DATABASE_URL: postgres://worksphere_owner:${POSTGRES_PASSWORD:-local_owner_password}@postgres:5432/worksphere
+      SESSION_SECRET: ${SESSION_SECRET:-local-development-secret-change-before-deployment}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      WEB_ORIGIN: http://localhost:5173
+      NODE_ENV: development
+      DEV_ONLY: "true"
+      SEED_PASSWORD: ${SEED_PASSWORD:-Demo-WorkSphere-2026!}
+      STORAGE_ROOT: /data/content
+      FILE_KEK: ${FILE_KEK:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      API_KEY_PEPPER: ${API_KEY_PEPPER:-local-demo-key-pepper-change-before-production}
+    volumes:
+      - contentdata:/data/content
+    command:
+      [
+        "sh",
+        "-c",
+        "npx tsx apps/api/src/db/migrate.ts && npx tsx apps/api/src/db/seed.ts && npx tsx apps/api/src/server.ts",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports: ["127.0.0.1:3000:3000"]
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      API_PROXY: http://api:3000
+    depends_on: [api]
+    ports: ["127.0.0.1:5173:5173"]
+volumes:
+  pgdata:
+  contentdata:

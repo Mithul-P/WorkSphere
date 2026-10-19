@@ -1,0 +1,8 @@
+node_modules
+.git
+.env
+coverage
+**/dist
+.worksphere-storage
+*.log
+*.ws-export

@@ -1,2 +1,11 @@
-import {defineConfig} from '@playwright/test';
-export default defineConfig({testDir:'./e2e',workers:1,timeout:45000,use:{baseURL:'http://localhost:3000',headless:true,screenshot:'only-on-failure',trace:'retain-on-failure'},webServer:{command:'npm run dev',url:'http://localhost:3000/api/health',reuseExistingServer:!process.env.CI,timeout:90000,env:{DATA_DIR:'.data/e2e',DEMO_MODE:'true'}},reporter:[['list'],['html',{open:'never'}]]});
+import { defineConfig } from "@playwright/test";
+export default defineConfig({
+  testDir: "scripts",
+  testMatch: "*.spec.ts",
+  use: {
+    baseURL: process.env.WEB_ORIGIN || "http://localhost:5173",
+    headless: true,
+  },
+  reporter: "list",
+  workers: 1,
+});

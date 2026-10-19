@@ -1,5 +1,0 @@
-/* Keep logout reachable in narrow browser panels and short windows. */
-.sidebar { overflow-y: auto; overscroll-behavior: contain; }
-.sidebar > .brand, .sidebar > nav, .sidebar > .sidebar-projects, .sidebar > .sidebar-bottom { flex-shrink: 0; }
-.profile > button[aria-label="Sign out"] { display: inline-flex !important; min-width: 40px; min-height: 40px; padding: 8px; flex-shrink: 0; }
-@media (max-width: 800px) { .profile { flex-direction: column; gap: 8px; } }

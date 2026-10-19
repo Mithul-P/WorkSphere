@@ -1,0 +1,56 @@
+name: WorkSphere isolation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bootstrap_admin
+          POSTGRES_PASSWORD: bootstrap_test_password
+          POSTGRES_DB: worksphere
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U bootstrap_admin -d worksphere"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://worksphere_app:local_app_password@localhost:5432/worksphere
+      OWNER_DATABASE_URL: postgres://worksphere_owner:local_owner_password@localhost:5432/worksphere
+      SESSION_SECRET: ci-only-session-secret-at-least-32-characters
+      TOTP_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      WEB_ORIGIN: http://localhost:5173
+      NODE_ENV: test
+      DEV_ONLY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Create least-privilege database roles
+        run: PGPASSWORD=bootstrap_test_password APP_DB_PASSWORD=local_app_password OWNER_DB_PASSWORD=local_owner_password POSTGRES_USER=bootstrap_admin POSTGRES_DB=worksphere PGHOST=localhost sh scripts/init-db.sh
+      - run: cp .env.example .env
+      - run: npm run migrate && npm run seed
+      - run: npm run lint && npm run typecheck && npm run build
+      - run: npm run db:audit
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Browser demo
+        run: |
+          NODE_ENV=development DEV_ONLY=true npm run dev > /tmp/worksphere-dev.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:5173/api/health && break || sleep 1; done
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-coverage
+          path: coverage
+      - name: Install and run Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks git --redact
+
