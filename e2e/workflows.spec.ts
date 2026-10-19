@@ -1,4 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
+for (const viewport of [{width:714,height:715},{width:1280,height:560}]) {
+test(`logout remains reachable at ${viewport.width}x${viewport.height}`,async({page})=>{
+    await page.setViewportSize(viewport);
+    await signIn(page);
+    const signOut=page.getByRole('button',{name:'Sign out',exact:true});
+    await expect(signOut).toBeVisible();
+    await signOut.click();
+    await expect(page.getByRole('heading',{name:'Welcome back.',exact:true})).toBeVisible();
+    const result=await page.request.get('/api/auth/session');
+    expect(result.status()).toBe(401);
+});
+}
 async function signIn(page: Page, role = 'Alpha admin') { await page.goto('/'); await page.getByRole('button', { name: role, exact: true }).click(); await page.getByRole('button', { name: 'Enter your workspace', exact: true }).click(); await expect(page.getByRole('heading', { name: /Good to see you/ })).toBeVisible(); }
 test('admin: project creation, task creation, completion and deletion', async ({ page }) => { await signIn(page); await page.locator('.page-heading').getByRole('button', { name: 'New project', exact: true }).click(); await page.getByLabel('Name', { exact: true }).fill('Browser test project'); await page.getByLabel('Description', { exact: true }).fill('End-to-end project'); await page.getByRole('button', { name: 'Create project', exact: true }).click(); await page.getByRole('button').filter({ has: page.getByRole('heading', { name: 'Browser test project', exact: true }) }).click(); await page.getByRole('button', { name: 'Add task', exact: true }).first().click(); await page.getByLabel('Task title', { exact: true }).fill('Browser test task'); await page.getByRole('button', { name: 'Create task', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Browser test task', exact: true })).toBeVisible(); await page.getByLabel('Status of Browser test task', { exact: true }).selectOption('done'); await expect(page.locator('.board-column.done').getByRole('heading', { name: 'Browser test task', exact: true })).toBeVisible(); page.once('dialog', d => d.accept()); await page.getByRole('button', { name: 'Delete Browser test task', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Browser test task', exact: true })).toHaveCount(0); });
 test('admin: tenant boundary check returns 404 and audit log', async ({ page }) => { await signIn(page); await page.getByRole('button', { name: 'Security Inspector', exact: true }).click(); await page.getByRole('button', { name: 'Run check', exact: true }).click(); await expect(page.getByText('404 · Access blocked. No project data returned. Audit event recorded.', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Denied', exact: true }).click(); await expect(page.locator('tbody tr').first()).toContainText('denied'); });
